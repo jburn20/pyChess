@@ -13,14 +13,6 @@ class Board:
     def print_board(self):
         for row in self.board:
             print(' '.join(row))
-    def read_board(self):
-        for row in self.board:
-            return row
-    def tester(self):
-        print()
-    def getPiePos(board, positionlist:str):
-        print(type(posses))
-        posses = positionlist.split(",")
-        return board[posses[0]][posses[1]]
+    
     
         
