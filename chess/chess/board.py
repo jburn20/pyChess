@@ -31,16 +31,22 @@ class Board:
     def is_valid(self,start,end):
         piece = self.board[start[0]][start[1]]
         desire = self.board[end[0]][end[1]]
+        print(piece,desire)
+        legal = False
         empty = '#'
-        print(desire)
-        if empty in desire:
-            print("clear")
+        xdiff = start[0] - end[0]  
+        ydiff = start[1] - end[1]
+        print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
+        print(f"Start: {start} End: {end}")
         if 'p' in piece:
             print("pawn")
+            if xdiff == 1 and ydiff == 0 and empty in desire:
+                legal = True
         if 'R' in piece:
             print("rook")
+        return legal
     def make_move(self,start,end):
-        pass
+        print("Move!!")
 """
 1. Move validation:
 -- Find piece with .is_valid()
