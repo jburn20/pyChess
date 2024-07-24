@@ -1,3 +1,5 @@
+import time
+
 class Board:
     def __init__(self):
         self.board = self.create_board()
@@ -15,9 +17,9 @@ class Board:
         return board
     def print_board(self):
         for row in self.board:
-            print(' '.join(row)) # Board is a list of 8 sublists with each list containing 1 row.
+            print(' '.join(row))
+            time.sleep(0.09)
         print()
-
     def coord_converter(self,coord):
         column, row = coord
         col_index = ord(column) - ord("a")
@@ -28,11 +30,13 @@ class Board:
         x,y = move.split()
         return self.coord_converter(x), self.coord_converter(y)
     
-    def is_valid(self,start,end):
+    def is_valid(self,start,end,):
+        board = self.board
         piece = self.board[start[0]][start[1]]
-        desire = self.board[end[0]][end[1]]
-        print(piece,desire)
+        endpiece = self.board[end[0]][end[1]]
+        print(f"Start piece: {piece} End piece: {endpiece}")
         legal = False
+        attack = False
         empty = '#'
         xdiff = start[0] - end[0]  
         ydiff = start[1] - end[1]
@@ -40,14 +44,34 @@ class Board:
         print(f"Start: {start} End: {end}")
         if 'p' in piece:
             print("pawn")
-            if xdiff == 1 and ydiff == 0 and empty in desire:
+            if xdiff == 1 and ydiff == 0 and empty in endpiece:
                 legal = True
         if 'R' in piece:
             print("rook")
-        return legal,piece
-    def make_move(self,start,end):
-        print("Move!!")
-    def move_checker(self,move):
+            for i in range(8):
+                vert = board[i][start[0]]
+                if vert not in empty:
+                    attack = True
+                
+        return legal,piece ,attack
+
+        """
+        !!!!!
+        MOVEMENT LOGIC HERE
+        !!!!!
+        """
+    def make_move(self,start,end,piece):
+        board = self.board
+        print("moving!")
+        board[end[0]][end[1]] = piece
+        board[start[0]][start[1]] = '#'
+
+
+    def move_checker(self,move,piece):
+        #### placeholder for validity functions
+        # eventually this function will intake an attack or move function
+        # if function is attack, we will check if it is aiming at a King (and put the game into check if so)
+        # else we just replace first piece with  second piece
         board = self.board
         specialrow = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         pawns = ['p' for _ in range(8)]
