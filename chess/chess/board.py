@@ -30,10 +30,12 @@ class Board:
         x,y = move.split()
         return self.coord_converter(x), self.coord_converter(y)
     
-    def is_valid(self,start,end,):
+    def is_valid(self,start,end,turn:bool):
         board = self.board
         piece = self.board[start[0]][start[1]]
         endpiece = self.board[end[0]][end[1]]
+        blackbools = [True for _ in range(8)]
+        whitebools = [True for _ in range(8)]
         print(f"Start piece: {piece} End piece: {endpiece}")
         legal = False
         attack = False
@@ -42,10 +44,26 @@ class Board:
         ydiff = start[1] - end[1]
         print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
         print(f"Start: {start} End: {end}")
-        if 'p' in piece:
-            print("pawn")
-            if xdiff == 1 and ydiff == 0 and empty in endpiece:
-                legal = True
+        if 'p' in piece: # pawn logic
+            if 'w' in piece:
+                whitebools[start[1]] = False
+                print(whitebools)
+            elif 'b' in piece:
+                blackbools[start[1]] = False
+                print(blackbools)
+            if turn:
+                if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True:
+                    legal = True
+                elif xdiff == 1 and ydiff == 0:
+                    legal = True
+                elif endpiece not in empty and xdiff == 1 and ydiff in [-1,1]:
+                    legal = True
+            elif turn == False:
+                if xdiff == -2 and ydiff == 0 and blackbools[start[1]]:
+                    legal = True
+                elif xdiff == -1 and ydiff == 0:
+                    legal = True
+                #elif 
         if 'R' in piece:
             print("rook")
             for i in range(8):
@@ -60,11 +78,17 @@ class Board:
         MOVEMENT LOGIC HERE
         !!!!!
         """
+    def switch_turn(self, turn:bool):
+        if turn:
+            turn = False
+        else: turn = True
+        return turn
+        print("switched")
     def make_move(self,start,end,piece):
         board = self.board
         print("moving!")
         board[end[0]][end[1]] = piece
-        board[start[0]][start[1]] = '#'
+        board[start[0]][start[1]] = '# '
 
 
     def move_checker(self,move,piece):

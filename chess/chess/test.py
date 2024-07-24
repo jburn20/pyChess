@@ -1,2 +1,7 @@
-tup = ((4,6),(4,4))
-print(tup[1])
+endpiece = '# '
+piece = "bp"
+empty = '# '
+xdiff = 1
+ydiff = 1
+if xdiff == 1 and ydiff in [-1,1] and endpiece not in empty:
+    print("True")
