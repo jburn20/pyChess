@@ -44,9 +44,20 @@ class Board:
                 legal = True
         if 'R' in piece:
             print("rook")
-        return legal
+        return legal,piece
     def make_move(self,start,end):
         print("Move!!")
+    def move_checker(self,move):
+        board = self.board
+        specialrow = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+        pawns = ['p' for _ in range(8)]
+        for i in range(8):
+            vert = board[i][move[0]]
+            if vert == '#':
+                pass # pass on through empty space, redundant code
+            if vert in pawns or vert in specialrow:
+                print("Hit")
+        
 """
 1. Move validation:
 -- Find piece with .is_valid()
