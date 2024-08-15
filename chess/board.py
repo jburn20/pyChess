@@ -1,19 +1,25 @@
-import time
 
+import time
 class Board:
     def __init__(self):
         self.board = self.create_board()
 
     def create_board(self):
-        board = [['# ' for _ in range(8)] for _ in range(8)]
+        board = [['# ' for _ in range(8)] for _ in range(9)] #first range - len of individual list | second range - num# of lists
         # ^ create board, now we can modify with board[] statements 
         # Initialize the board with pieces
+        navcol = ['a','b','c','d','e','f','g','h']
+        navrow = [8,7,6,5,4,3,2,1]
+        board[8] = [" " + n for n in navcol]
         specialrow = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         pawns = ['p' for _ in range(8)]
         board[0] = ['w' + x for x in specialrow] # we can set our bottom and top rows to have special rows
         board[1] = ['w' + j for j in pawns]
         board[7] = ['b' + i for i in specialrow] ## iteration
         board[6] = ['b' + n for n in pawns]
+        for i in navrow:
+            board[i-1].append(str(8-i+1))
+        
         return board
     def print_board(self):
         for row in self.board:
