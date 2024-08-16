@@ -57,14 +57,14 @@ class Board:
             elif 'b' in piece:
                 blackbools[start[1]] = False
                 print(blackbools)
-            if turn:
+            if turn == False:
                 if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True:
                     legal = True
                 elif xdiff == 1 and ydiff == 0:
                     legal = True
                 elif endpiece not in empty and xdiff == 1 and ydiff in [-1,1]:
                     legal = True
-            elif turn == False:
+            elif turn:
                 if xdiff == -2 and ydiff == 0 and blackbools[start[1]]:
                     legal = True
                 elif xdiff == -1 and ydiff == 0:
