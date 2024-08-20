@@ -38,9 +38,9 @@ class Board:
     
     def is_valid(self,start,end,turn:bool):
         board = self.board
-        piece = self.board[start[0]][start[1]]
-        endpiece = self.board[end[0]][end[1]]
-        blackbools = [True for _ in range(8)]
+        piece = self.board[start[0]][start[1]] #start[0] - Individual Sublist #start[1] position within Sublist
+        endpiece = self.board[end[0]][end[1]] #end[0] - Individual sublist #start[1] position within sublist
+        blackbools = [True for _ in range(8)] # for _ = placeholder. could be a-z, for when you just don't care enough.
         whitebools = [True for _ in range(8)]
         print(f"Start piece: {piece} End piece: {endpiece}")
         legal = False
@@ -48,37 +48,54 @@ class Board:
         empty = '#'
         xdiff = start[0] - end[0]  
         ydiff = start[1] - end[1]
-        print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
-        print(f"Start: {start} End: {end}")
+        #print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
+        #print(f"Start: {start} End: {end}")
+        print(f"Start[0]: {start[0]}\nStart[1]:{start[1]}\nEnd[0]:{end[0]}\nEnd[1]:{end[1]}")
+        print(f"Start tuple: {start}\nEnd tuple: {end}")
         if 'p' in piece: # pawn logic
             if 'w' in piece:
-                whitebools[start[1]] = False
+                whitebools[start[1]] = False #
                 print(whitebools)
             elif 'b' in piece:
                 blackbools[start[1]] = False
                 print(blackbools)
-            if turn == False:
+            elif turn: ## white turn
+                if xdiff == -2 and ydiff == 0 and blackbools[start[1]]:
+                    legal = True
+                elif xdiff == -1 and ydiff == 0:
+                    legal = True
+            if turn == False: ## black turn
                 if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True:
                     legal = True
                 elif xdiff == 1 and ydiff == 0:
                     legal = True
                 elif endpiece not in empty and xdiff == 1 and ydiff in [-1,1]:
                     legal = True
-            elif turn:
-                if xdiff == -2 and ydiff == 0 and blackbools[start[1]]:
-                    legal = True
-                elif xdiff == -1 and ydiff == 0:
-                    legal = True
                 #elif 
         if 'R' in piece:
             print("rook")
             for i in range(8):
-                vert = board[i][start[0]]
-                if vert not in empty:
-                    attack = True
-                
-        return legal,piece ,attack
+                vert = board[i][start[0]] # board[i] takes us through each sublist. start[0] makes sure we only see the column we're concerned with
+                if vert != '#':
+                    # check if piece is on the same team; attack if not
+                    if 'w' in vert and piece:
+                        legal = False # redundant, just to make sure legal is false if a piece runs into their teammate
+                        pass#!!!!!
+                    elif 'b' in vert and piece:
+                        legal = False
+                        pass#!!!!!!!
+                    else:
+                        attack = True
 
+                    print("Rooks cannot jump over other pieces.")
+                    return legal, piece, attack
+        if 'N' in piece:
+            print("Knight")
+            if turn: #white turn
+                pass#!!!!!!
+            elif turn == False: #black turn
+                pass#!!!!!!!
+        return legal,piece ,attack
         """
         !!!!!
         MOVEMENT LOGIC HERE
@@ -95,31 +112,3 @@ class Board:
         print("moving!")
         board[end[0]][end[1]] = piece
         board[start[0]][start[1]] = '# '
-
-
-    def move_checker(self,move,piece):
-        #### placeholder for validity functions
-        # eventually this function will intake an attack or move function
-        # if function is attack, we will check if it is aiming at a King (and put the game into check if so)
-        # else we just replace first piece with  second piece
-        board = self.board
-        specialrow = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-        pawns = ['p' for _ in range(8)]
-        for i in range(8):
-            vert = board[i][move[0]]
-            if vert == '#':
-                pass # pass on through empty space, redundant code
-            if vert in pawns or vert in specialrow:
-                print("Hit")
-        
-"""
-1. Move validation:
--- Find piece with .is_valid()
--- Implement logic such as pawn cannot move farther than 1 space
-2. Move logic
-3. Update board with move logic
-"""
-    
-    
-    
-        
