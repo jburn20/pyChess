@@ -1,0 +1,15 @@
+# Byte-compiled files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+venv/
+env/
+
+# macOS Finder
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
