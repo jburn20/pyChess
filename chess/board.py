@@ -48,8 +48,8 @@ class Board:
         empty = '#'
         xdiff = start[0] - end[0]  
         ydiff = start[1] - end[1]
-        #print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
-        #print(f"Start: {start} End: {end}")
+        print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
+        print(f"Start: {start} End: {end}")
         print(f"Start[0]: {start[0]}\nStart[1]:{start[1]}\nEnd[0]:{end[0]}\nEnd[1]:{end[1]}")
         print(f"Start tuple: {start}\nEnd tuple: {end}")
         if 'p' in piece: # pawn logic
@@ -59,12 +59,12 @@ class Board:
             elif 'b' in piece:
                 blackbools[start[1]] = False
                 print(blackbools)
-            elif turn: ## white turn
+            if turn: ## white turn
                 if xdiff == -2 and ydiff == 0 and blackbools[start[1]]:
                     legal = True
                 elif xdiff == -1 and ydiff == 0:
                     legal = True
-            if turn == False: ## black turn
+            elif turn == False: ## black turn
                 if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True:
                     legal = True
                 elif xdiff == 1 and ydiff == 0:
