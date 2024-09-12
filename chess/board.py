@@ -59,19 +59,23 @@ class Board:
             elif 'b' in piece:
                 blackbools[start[1]] = False
                 print(blackbools)
-            if turn: ## white turn
-                if xdiff == -2 and ydiff == 0 and blackbools[start[1]]:
+            if turn: 
+                if xdiff == -2 and ydiff == 0 and blackbools[start[1]] and endpiece[0] == '#': #* if pawn hasnt move they can move up twice
                     legal = True
-                elif xdiff == -1 and ydiff == 0:
+                elif xdiff == -1 and ydiff == 0 and endpiece[0] == '#': #* if space is empty and white wants to move down one space 
                     legal = True
+                elif xdiff == -1 and ydiff in [-1,1] and endpiece[0] == 'b': #* if white wants to move down and diagonal, the square must have an enemy
+                    legal = True
+                    attack = True
             elif turn == False: ## black turn
-                if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True:
+                if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True and endpiece[0] == '#':
                     legal = True
-                elif xdiff == 1 and ydiff == 0:
+                elif xdiff == 1 and ydiff == 0 and endpiece[0] == '#':
                     legal = True
-                elif endpiece not in empty and xdiff == 1 and ydiff in [-1,1]:
+                elif xdiff == 1 and ydiff in [-1,1] and endpiece[0] == 'w':
                     legal = True
-                #elif 
+                    attack = True
+                #! EN PASSANT 
         if 'R' in piece:
             if xdiff == 0: #* moving sideways
                 for i in range(abs(ydiff)):
@@ -81,6 +85,7 @@ class Board:
                         print("Can't hit your own piece")
                         break
                     else: legal = True
+                    attack = True 
                     return legal, piece, attack
             elif ydiff == 0:
                 print("moving vertically")
@@ -91,7 +96,7 @@ class Board:
                         print("Can't hit your own pieces")
                         break
                     else: legal = True 
-
+                    attack = True
                     return legal, piece, attack
         if 'N' in piece:
             print("Knight")
