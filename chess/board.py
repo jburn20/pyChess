@@ -73,21 +73,25 @@ class Board:
                     legal = True
                 #elif 
         if 'R' in piece:
-            print("rook")
-            for i in range(8):
-                vert = board[i][start[0]] # board[i] takes us through each sublist. start[0] makes sure we only see the column we're concerned with
-                if vert != '#':
-                    # check if piece is on the same team; attack if not
-                    if 'w' in vert and piece:
-                        legal = False # redundant, just to make sure legal is false if a piece runs into their teammate
-                        pass#!!!!!
-                    elif 'b' in vert and piece:
-                        legal = False
-                        pass#!!!!!!!
-                    else:
-                        attack = True
+            if xdiff == 0: #* moving sideways
+                for i in range(abs(ydiff)):
+                    xlaser = board[start[0]][i+1]
+                    print(xlaser, i)
+                    if xlaser[0] == piece[0]:
+                        print("Can't hit your own piece")
+                        break
+                    else: legal = True
+                    return legal, piece, attack
+            elif ydiff == 0:
+                print("moving vertically")
+                for i in range(abs(xdiff)):
+                    ylaser = board[i+1][start[1]]
+                    print(ylaser, i)
+                    if ylaser[0] == piece[0]:
+                        print("Can't hit your own pieces")
+                        break
+                    else: legal = True 
 
-                    print("Rooks cannot jump over other pieces.")
                     return legal, piece, attack
         if 'N' in piece:
             print("Knight")
