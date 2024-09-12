@@ -45,7 +45,6 @@ class Board:
         print(f"Start piece: {piece} End piece: {endpiece}")
         legal = False
         attack = False
-        empty = '#'
         xdiff = start[0] - end[0]  
         ydiff = start[1] - end[1]
         print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
@@ -100,10 +99,14 @@ class Board:
                     return legal, piece, attack
         if 'N' in piece:
             print("Knight")
-            if turn: #white turn
-                pass#!!!!!!
-            elif turn == False: #black turn
-                pass#!!!!!!!
+            if abs(xdiff) == 1 and abs(ydiff) == 2 and endpiece[0] != piece[0]:
+                legal = True
+                if endpiece[0] != '#':
+                    attack = True
+            elif abs(xdiff) == 2 and abs(ydiff) == 1 and endpiece[0] != piece[0]:
+                legal = True
+                if endpiece[0] != '#':
+                    attack = True
         return legal,piece ,attack
         """
         !!!!!
@@ -115,7 +118,6 @@ class Board:
             turn = False
         else: turn = True
         return turn
-        print("switched")
     def make_move(self,start,end,piece):
         board = self.board
         print("moving!")

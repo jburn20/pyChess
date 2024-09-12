@@ -21,6 +21,7 @@ def main():
             turns+=1
             print(f"Can white move? {whiteTurn}")
             print(f"Turns: {turns}")
+            print(f"Attack:{attack}")
         else:
             print("Illegal Move")
 
