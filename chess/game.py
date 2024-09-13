@@ -29,4 +29,8 @@ def main():
         
 
 if __name__ == "__main__":
-    main()
+    while True:
+        try:
+            main()
+        except ValueError:
+            print("Please enter valid start and end coordinates. Example: h7 h5")

@@ -75,7 +75,52 @@ class Board:
                     legal = True
                     attack = True
                 #! EN PASSANT 
-        if 'R' in piece:
+        elif 'R' in piece:
+            if xdiff == 0: #* moving sideways
+                for i in range(abs(ydiff)):
+                    xlaser = board[start[0]][i+1]
+                    print(xlaser, i)
+                    if xlaser[0] == piece[0]:
+                        print("Can't hit your own piece")
+                        break
+                    else: legal = True
+                    attack = True 
+                    return legal, piece, attack
+            elif ydiff == 0:
+                print("moving vertically")
+                for i in range(abs(xdiff)):
+                    ylaser = board[i+1][start[0]]
+                    print(ylaser, i)
+                    if ylaser[0] == piece[0]:
+                        print("Can't hit your own pieces")
+                        print(piece[0],ylaser[0])
+                    else: legal = True 
+                    if endpiece[0] != '#' and piece[0] != endpiece[0]:
+                        attack = True
+                    return legal, piece, attack
+        elif 'N' in piece:
+            print("Knight")
+            if abs(xdiff) == 1 and abs(ydiff) == 2 and endpiece[0] != piece[0]:
+                legal = True
+                if endpiece[0] != '#':
+                    attack = True
+            elif abs(xdiff) == 2 and abs(ydiff) == 1 and endpiece[0] != piece[0]:
+                legal = True
+                if endpiece[0] != '#':
+                    attack = True
+        elif 'B' in piece[1]:
+            if piece[0] == endpiece[0]:
+                print("cant hit your own piece")
+                return legal, piece, attack
+            elif abs(xdiff) == abs(ydiff) and abs(xdiff) in [1,2,3,4,5,6,7,8]:
+                legal = True
+                if piece[0] in ['w','b'] and endpiece[0] in ['w''b'] and piece[0] != endpiece[0]:
+                    attack = True
+        elif 'Q' in piece[1]:
+            if abs(xdiff) == abs(ydiff) and abs(xdiff) in [1,2,3,4,5,6,7,8]:
+                legal = True
+                if piece[0] in ['w','b'] and endpiece[0] in ['w''b'] and piece[0] != endpiece[0]:
+                    attack = True
             if xdiff == 0: #* moving sideways
                 for i in range(abs(ydiff)):
                     xlaser = board[start[0]][i+1]
@@ -97,17 +142,9 @@ class Board:
                     else: legal = True 
                     attack = True
                     return legal, piece, attack
-        if 'N' in piece:
-            print("Knight")
-            if abs(xdiff) == 1 and abs(ydiff) == 2 and endpiece[0] != piece[0]:
-                legal = True
-                if endpiece[0] != '#':
-                    attack = True
-            elif abs(xdiff) == 2 and abs(ydiff) == 1 and endpiece[0] != piece[0]:
-                legal = True
-                if endpiece[0] != '#':
-                    attack = True
+            
         return legal,piece ,attack
+
         """
         !!!!!
         MOVEMENT LOGIC HERE

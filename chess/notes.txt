@@ -1,0 +1,5 @@
+bishops move diagnolly
+xdiff evals how far up or down we go
+ydiff evals how left or right we go
+if abs(xdiff) == abs(ydiff) and abs(xdiff) in [1,2,3,4,5,6,7,8]
+    legal = True
