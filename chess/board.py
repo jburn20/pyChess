@@ -36,115 +36,7 @@ class Board:
             board[i-1].append(str(8-i+1)) 
         
         return board
-    def is_valid(self,start,end,turn:bool):
-        board = self.board
-        piece = self.board[start[0]][start[1]] #start[0] - Individual Sublist #start[1] position within Sublist
-        endpiece = self.board[end[0]][end[1]] #end[0] - Individual sublist #start[1] position within sublist
-        blackbools = [True for _ in range(8)] # for _ = placeholder. could be a-z, for when you just don't care enough.
-        whitebools = [True for _ in range(8)]
-        print(f"Start piece: {piece} End piece: {endpiece}")
-        legal = False
-        attack = False
-        xdiff = start[0] - end[0]  
-        ydiff = start[1] - end[1]
-        print(f"Xdiff: {xdiff} Ydiff: {ydiff}")
-        print(f"Start: {start} End: {end}")
-        print(f"Start[0]: {start[0]}\nStart[1]:{start[1]}\nEnd[0]:{end[0]}\nEnd[1]:{end[1]}")
-        print(f"Start tuple: {start}\nEnd tuple: {end}")
-        if 'p' in piece: # pawn logic
-            if 'w' in piece:
-                whitebools[start[1]] = False #
-                print(whitebools)
-            elif 'b' in piece:
-                blackbools[start[1]] = False
-                print(blackbools)
-            if turn: 
-                if xdiff == -2 and ydiff == 0 and blackbools[start[1]] and endpiece[0] == '#': #* if pawn hasnt move they can move up twice
-                    legal = True
-                elif xdiff == -1 and ydiff == 0 and endpiece[0] == '#': #* if space is empty and white wants to move down one space 
-                    legal = True
-                elif xdiff == -1 and ydiff in [-1,1] and endpiece[0] == 'b': #* if white wants to move down and diagonal, the square must have an enemy
-                    legal = True
-                    attack = True
-            elif turn == False: ## black turn
-                if xdiff == 2 and ydiff == 0 and whitebools[start[1]] == True and endpiece[0] == '#':
-                    legal = True
-                elif xdiff == 1 and ydiff == 0 and endpiece[0] == '#':
-                    legal = True
-                elif xdiff == 1 and ydiff in [-1,1] and endpiece[0] == 'w':
-                    legal = True
-                    attack = True
-                #! EN PASSANT 
-        elif 'R' in piece:
-            if xdiff == 0: #* moving sideways
-                for i in range(abs(ydiff)):
-                    xlaser = board[start[0]][i+1]
-                    print(xlaser, i)
-                    if xlaser[0] == piece[0]:
-                        print("Can't hit your own piece")
-                        break
-                    else: legal = True
-                    attack = True 
-                    return legal, piece, attack
-            elif ydiff == 0:
-                print("moving vertically")
-                for i in range(abs(xdiff)):
-                    ylaser = board[i+1][start[0]]
-                    print(ylaser, i)
-                    if ylaser[0] == piece[0]:
-                        print("Can't hit your own pieces")
-                        print(piece[0],ylaser[0])
-                    else: legal = True 
-                    if endpiece[0] != '#' and piece[0] != endpiece[0]:
-                        attack = True
-                    return legal, piece, attack
-        elif 'N' in piece:
-            print("Knight")
-            if abs(xdiff) == 1 and abs(ydiff) == 2 and endpiece[0] != piece[0]:
-                legal = True
-                if endpiece[0] != '#':
-                    attack = True
-            elif abs(xdiff) == 2 and abs(ydiff) == 1 and endpiece[0] != piece[0]:
-                legal = True
-                if endpiece[0] != '#':
-                    attack = True
-        elif 'B' in piece[1]:
-            if piece[0] == endpiece[0]:
-                print("cant hit your own piece")
-                return legal, piece, attack
-            elif abs(xdiff) == abs(ydiff) and abs(xdiff) in [1,2,3,4,5,6,7,8]:
-                legal = True
-                if piece[0] in ['w','b'] and endpiece[0] in ['w''b'] and piece[0] != endpiece[0]:
-                    attack = True
-        elif 'Q' in piece[1]:
-            if abs(xdiff) == abs(ydiff) and abs(xdiff) in [1,2,3,4,5,6,7,8]:
-                legal = True
-                if piece[0] in ['w','b'] and endpiece[0] in ['w''b'] and piece[0] != endpiece[0]:
-                    attack = True
-            if xdiff == 0: #* moving sideways
-                for i in range(abs(ydiff)):
-                    xlaser = board[start[0]][i+1]
-                    print(xlaser, i)
-                    if xlaser[0] == piece[0]:
-                        print("Can't hit your own piece")
-                        break
-                    else: legal = True
-                    attack = True 
-                    return legal, piece, attack
-            elif ydiff == 0:
-                print("moving vertically")
-                for i in range(abs(xdiff)):
-                    ylaser = board[i+1][start[1]]
-                    print(ylaser, i)
-                    if ylaser[0] == piece[0]:
-                        print("Can't hit your own pieces")
-                        break
-                    else: legal = True 
-                    attack = True
-                    return legal, piece, attack
-            
-        return legal,piece ,attack
-
+    
         """
         !!!!!
         MOVEMENT LOGIC HERE
@@ -173,11 +65,47 @@ class Board:
             print(' '.join(printable_row))
             time.sleep(0.09)
         print()
-    def coord_converter(self,coord):
-        column, row = coord
-        col_index = ord(column) - ord("a")
-        row_index = 8 - int(row)
-        return (row_index,col_index)
+    # In Board.py, inside the Board class:
+
+    def alg_to_coord(self, alg_coord):
+        """
+        Converts algebraic notation (e.g., 'e2') to internal (row, col) coordinates (e.g., (6, 4)).
+        """
+        if len(alg_coord) != 2:
+            raise ValueError("Invalid algebraic coordinate format.")
+            
+        file = alg_coord[0].lower() # a-h
+        rank = alg_coord[1]         # 1-8
+
+        # File to Column: 'a' -> 0, 'h' -> 7
+        col = ord(file) - ord('a')
+        
+        # Rank to Row: '1' -> 7, '8' -> 0 (Flipped board)
+        row = 8 - int(rank)
+        
+        if not (0 <= row < 8 and 0 <= col < 8):
+            raise IndexError("Coordinates are outside the board boundaries.")
+
+        return (row, col)
+# In Board.py, inside the Board class:
+
+    def coord_to_alg(self, coord):
+        """
+        Converts internal (row, col) coordinates (e.g., (6, 4)) back to algebraic notation (e.g., 'e2').
+        """
+        row, col = coord
+        
+        # Column to File: 0 -> 'a', 7 -> 'h'
+        file = chr(ord('a') + col)
+        
+        # Row to Rank: 7 -> '1', 0 -> '8'
+        rank = str(8 - row)
+        
+        return file + rank
+    def get_raw_input(self):
+        """Prompts the user and returns the raw string input."""
+        # Note: Using input() here will pause the execution until the user responds.
+        return input("Make your move (e.g., e2 e4) or type 'moves': ").strip()
     def get_move(self):
         move = input("Make your move: ")
         x,y = move.split()

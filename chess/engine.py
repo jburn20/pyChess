@@ -14,12 +14,170 @@ class ChessEngine(Board):
         # Deep copy the state variables
         self.castling_rights = board_instance.castling_rights.copy()
         self.en_passant_target = board_instance.en_passant_target
-    
+    def apply_move(self, start, end):
+        """
+        Applies a pseudo-legal move to the internal board and records state for undo.
+        Now includes special move handling for Castling and En Passant.
+        """
+        piece = self.board[start[0]][start[1]]
+        
+        # Determine piece details
+        piece_color = piece[0] if isinstance(piece, str) else piece[0][0]
+        piece_type = piece[1] if isinstance(piece, str) else piece[0][1] 
+        
+        # 1. CAPTURE STATE FOR UNDO
+        state_backup = {
+            'captured_piece': self.board[end[0]][end[1]],
+            'prev_castling_rights': self.castling_rights.copy(), # Deep copy mutable dict
+            'prev_en_passant_target': self.en_passant_target,
+            'piece_moved_was_string': isinstance(piece, str), 
+            'special_flag': None, # To track castling and en passant execution
+        }
+        
+        # --- Special Move Pre-Move Checks ---
+        ydiff = start[1] - end[1]
+
+        # Check for En Passant Capture (before moving the piece)
+        if piece_type == 'p' and end == self.en_passant_target:
+            # Captured piece is on the start row, end col
+            captured_pawn_pos = (start[0], end[1]) 
+            state_backup['captured_piece'] = self.board[captured_pawn_pos[0]][captured_pawn_pos[1]]
+            self.board[captured_pawn_pos[0]][captured_pawn_pos[1]] = '# ' # Remove the captured pawn
+            state_backup['special_flag'] = 'EP_CAPTURE'
+
+        # 2. UPDATE BOARD POSITION & PAWN STATE (Standard Move)
+        
+        # Update pawn representation to tuple if it was a string
+        if piece_type == 'p' and isinstance(piece, str):
+            self.board[end[0]][end[1]] = (piece, True)
+        else:
+            self.board[end[0]][end[1]] = piece
+                
+        self.board[start[0]][start[1]] = '# ' # Clear starting square
+
+        # 3. SPECIAL MOVE EXECUTION: Castling (Move the Rook)
+        if piece_type == 'K' and abs(ydiff) == 2:
+            king_row = start[0]
+            
+            if ydiff == -2: # King-side (Short) Castling: e to g
+                rook_piece = self.board[king_row][7]
+                self.board[king_row][5] = rook_piece
+                self.board[king_row][7] = '# '
+                state_backup['special_flag'] = 'K_CASTLE'
+            
+            elif ydiff == 2: # Queen-side (Long) Castling: e to c
+                rook_piece = self.board[king_row][0]
+                self.board[king_row][3] = rook_piece
+                self.board[king_row][0] = '# '
+                state_backup['special_flag'] = 'Q_CASTLE'
+                
+        # 4. UPDATE CASTLING RIGHTS
+        if piece_type == 'K':
+            self.castling_rights[piece_color + 'K'] = False
+            self.castling_rights[piece_color + 'Q'] = False
+        elif piece_type == 'R':
+            if start == (7, 0): self.castling_rights['wQ'] = False
+            elif start == (7, 7): self.castling_rights['wK'] = False
+            elif start == (0, 0): self.castling_rights['bQ'] = False
+            elif start == (0, 7): self.castling_rights['bK'] = False
+
+        # 5. UPDATE EN PASSANT TARGET
+        self.en_passant_target = None # Reset
+        if self._is_pawn_double_push(start, end, piece_type):
+            target_row = (start[0] + end[0]) // 2 
+            self.en_passant_target = (target_row, start[1])
+                
+        return state_backup
     def internal_board(self):
         """Return 8x8 logical board ignoring labels for calculations."""
         return [row[:8] for row in self.board[:8]]
-# Add this helper function to the ChessEngine class:
+
     # In ChessEngine.py, inside the ChessEngine class:
+
+    def undo_move(self, start, end, state_backup):
+        """
+        Reverses the move using the state backup, including special moves (Castling, En Passant).
+        """
+        # 1. Restore piece positions and captured piece
+        piece_moved = self.board[end[0]][end[1]]
+        
+        # Logic to handle restoring the pawn state (from tuple back to string)
+        is_pawn_to_restore = False
+        
+        # Check if the piece at the end position is a tuple and was originally a string
+        if isinstance(piece_moved, tuple):
+            # piece_moved[0] is the piece symbol string (e.g., 'wp')
+            piece_symbol = piece_moved[0] 
+            
+            # Check if it's a pawn AND if the backup says it was originally a string
+            if piece_symbol[1] == 'p' and state_backup['piece_moved_was_string']:
+                is_pawn_to_restore = True
+                
+        if is_pawn_to_restore:
+            # Restore the original string representation, e.g., 'wp'
+            self.board[start[0]][start[1]] = piece_symbol 
+        else:
+            # Restore as is (either string, tuple, or '# ')
+            self.board[start[0]][start[1]] = piece_moved
+
+        # Restore the captured piece/empty square at the end position
+        self.board[end[0]][end[1]] = state_backup['captured_piece']
+        
+        # 2. Restore global state
+        self.castling_rights = state_backup['prev_castling_rights']
+        self.en_passant_target = state_backup['prev_en_passant_target']
+
+        # 3. SPECIAL MOVE UNDO: Castling (Move the Rook back)
+        if state_backup['special_flag'] == 'K_CASTLE':
+            king_row = start[0]
+            # Move Rook back from col 5 to col 7
+            rook_piece = self.board[king_row][5]
+            self.board[king_row][7] = rook_piece
+            self.board[king_row][5] = '# '
+
+        elif state_backup['special_flag'] == 'Q_CASTLE':
+            king_row = start[0]
+            # Move Rook back from col 3 to col 0
+            rook_piece = self.board[king_row][3]
+            self.board[king_row][0] = rook_piece
+            self.board[king_row][3] = '# '
+            
+        # 4. SPECIAL MOVE UNDO: En Passant (Restore the captured pawn)
+        elif state_backup['special_flag'] == 'EP_CAPTURE':
+            # The captured pawn was removed from the target's column, but the start row
+            captured_pawn_pos = (start[0], end[1]) 
+            self.board[captured_pawn_pos[0]][captured_pawn_pos[1]] = state_backup['captured_piece']
+
+    def get_king_pos(self, color):
+        """
+        Finds and returns the (r, c) coordinates of the King of the given color.
+        """
+        king_symbol = color + 'K'
+        for r in range(8):
+            for c in range(8):
+                piece = self.board[r][c]
+                # King is always represented as a string
+                if piece == king_symbol:
+                    return (r, c)
+        return None # Should not happen in a valid game state
+
+    def is_in_check(self, color):
+        """
+        Checks if the King of the specified color is currently under attack.
+        Relies on the already implemented is_square_attacked.
+        """
+        king_pos = self.get_king_pos(color)
+        if king_pos is None:
+            # This occurs if the King has been captured (i.e., checkmate occurred on the previous move)
+            # For the purpose of the engine search, if the King is gone, we'll treat it as safe 
+            # (the move that caused the capture would have been filtered by the opponent's check logic).
+            return False
+            
+        kr, kc = king_pos
+        attacker_color = 'b' if color == 'w' else 'w'
+        
+        # Check if the square the King is on is attacked by the opponent color
+        return self.is_square_attacked(kr, kc, attacker_color)
 
     def is_square_attacked(self, r, c, attacker_color):
         """
@@ -199,12 +357,13 @@ class ChessEngine(Board):
         return abs(start[0] - end[0]) == 2
     # In ChessEngine.py, inside the ChessEngine class:
 
-    def generate_all_legal_moves(self, color, debug=False):
+    # In ChessEngine.py, inside the ChessEngine class:
+
+    def _get_pseudo_legal_moves(self, color):
         """
-        Generates all pseudo-legal moves for a given color, including castling.
-        NOTE: This is still pseudo-legal; it does not filter moves that leave the King in check.
-        Returns a dictionary: keys are starting positions (row, col),
-        values are lists of valid ending positions [(row, col), ...].
+        Generates all pseudo-legal moves for a given color, ignoring King safety.
+        NOTE: Includes basic piece moves, pawn moves (not E.P. or Promotion), and Castling.
+        Returns a dictionary: {(start_r, start_c): [(end_r, end_c), ...]}
         """
         moves = {}
         
@@ -212,18 +371,14 @@ class ChessEngine(Board):
             for c in range(8):
                 piece = self.board[r][c]
 
-                # Skip empty squares
                 if piece == '# ':
                     continue
 
-                # Handle pawns as tuple (piece, has_moved)
                 if isinstance(piece, tuple):
-                    piece_symbol, has_moved = piece
+                    piece_symbol = piece[0]
                 else:
                     piece_symbol = piece
-                    # has_moved is implicitly tracked via r == start_row below
 
-                # Only consider pieces of the given color
                 if piece_symbol[0] != color:
                     continue
 
@@ -243,26 +398,28 @@ class ChessEngine(Board):
                         if r == start_row and self.board[r + 2 * direction][c] == '# ':
                             piece_moves.append((r + 2 * direction, c))
 
-                    # Diagonal captures
+                    # Diagonal captures (including *potential* E.P. target)
                     for dc in [-1, 1]:
                         nc = c + dc
                         if 0 <= nc < 8 and 0 <= nr < 8:
                             target_piece = self.board[nr][nc]
-                            # Check for En Passant in a later step!
+                            # Standard capture
                             if target_piece != '# ' and target_piece[0] != color:
                                 piece_moves.append((nr, nc))
-
-                # --- Rook, Bishop, Queen (Slider moves using helper) ---
-                elif piece_type == 'R':
-                    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-                    piece_moves = self._get_slider_moves(r, c, color, directions)
-                
-                elif piece_type == 'B':
-                    directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
-                    piece_moves = self._get_slider_moves(r, c, color, directions)
-                
-                elif piece_type == 'Q':
-                    directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+                            
+                            # En Passant Generation (HIGH PRIORITY TODO: Integrate E.P. logic here)
+                            if self.en_passant_target == (nr, nc):
+                                # This is the generation of the E.P. move itself
+                                piece_moves.append((nr, nc))
+                                
+                # --- Rook, Bishop, Queen (Slider moves) ---
+                elif piece_type in ['R', 'B', 'Q']:
+                    if piece_type == 'R':
+                        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+                    elif piece_type == 'B':
+                        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+                    elif piece_type == 'Q':
+                        directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
                     piece_moves = self._get_slider_moves(r, c, color, directions)
 
                 # --- Knight moves ---
@@ -276,42 +433,64 @@ class ChessEngine(Board):
                             if target_piece == '# ' or target_piece[0] != color:
                                 piece_moves.append((nr, nc))
 
-                # --- King moves (Regular and Castling) ---
+                # --- King moves (Regular) ---
                 elif piece_type == 'K':
-                    # 1. Regular King moves (one step)
                     king_directions = [(-1, -1), (-1, 0), (-1, 1),
-                                    (0, -1),          (0, 1),
-                                    (1, -1),  (1, 0),  (1, 1)]
+                                    (0, -1), (0, 1),
+                                    (1, -1), (1, 0), (1, 1)]
                     for dr, dc in king_directions:
                         nr, nc = r + dr, c + dc
                         if 0 <= nr < 8 and 0 <= nc < 8:
                             target_piece = self.board[nr][nc]
                             if target_piece == '# ' or target_piece[0] != color:
                                 piece_moves.append((nr, nc))
-                    
-                    # 2. Add Castling Moves (Generated separately)
-                    # _get_castling_moves returns [(start, end), ...] for the King's move
-                    # We handle the integration of castling moves AFTER the main loop 
-                    # to avoid duplicating logic inside every King square check.
                 
                 if piece_moves:
                     moves[(r, c)] = piece_moves
-                    if debug:
-                        print(f"Piece {piece} at {(r,c)} can move to: {piece_moves}")
 
-        # --- FINAL STEP: Add Castling Moves to the King's list (Only one King exists) ---
+        # --- FINAL STEP: Add Castling Moves ---
         castling_moves_list = self._get_castling_moves(color)
         
-        # We assume the King's starting position (r, c) is the same for all castling moves
         if castling_moves_list:
-            # Find the King's start position: (7, 4) for White, (0, 4) for Black
             king_start_pos = (7 if color == 'w' else 0, 4)
             
             if king_start_pos not in moves:
                 moves[king_start_pos] = []
                 
             for start, end in castling_moves_list:
-                # Add the King's destination (c1 or g1) to its list of moves
                 moves[king_start_pos].append(end)
 
         return moves
+    # In ChessEngine.py, inside the ChessEngine class:
+
+    def generate_all_legal_moves(self, color):
+        """
+        Generates ALL truly LEGAL moves for a given color.
+        This filters pseudo-legal moves by checking if the King is left in check.
+        """
+        # 1. Generate all pseudo-legal moves
+        pseudo_moves = self._get_pseudo_legal_moves(color)
+        
+        legal_moves = {}
+        
+        # 2. Filter every pseudo-legal move
+        for start, end_list in pseudo_moves.items():
+            r_start, c_start = start
+            
+            for end in end_list:
+                r_end, c_end = end
+                
+                # Apply Move
+                state_backup = self.apply_move(start, end)
+                
+                # Check for Legality: If the king is NOT in check after the move, it's legal
+                if not self.is_in_check(color):
+                    # Move is safe, add it to the final legal list
+                    if start not in legal_moves:
+                        legal_moves[start] = []
+                    legal_moves[start].append(end)
+                
+                # Undo Move (CRITICAL: Must restore the board!)
+                self.undo_move(start, end, state_backup)
+                
+        return legal_moves
